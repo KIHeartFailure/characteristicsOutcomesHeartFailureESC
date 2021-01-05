@@ -1,0 +1,53 @@
+```{r inc, cache=cacheon}
+irfunc <- function(eventname, time, event) {
+  
+  ev <- by(survdata[, event], survdata[, "d_efgroup"], sum)
+  s <- by(survdata[, time], survdata[, "d_efgroup"], sum) / 365.25
+  r <- epitools::pois.exact(x = ev, pt = s / 100)
+
+  ir <- paste0(
+    ev, ", ",
+    dF(s, dig = 0), ", ",
+    dF(r$rate, dig = 1), " (",
+    dF(r$lower, dig = 1), "-",
+    dF(r$upper, dig = 1), ")"
+  )
+    
+  sdiff <- survdiff(formula(paste0("Surv(", time, ",", event, "== 1) ~ d_efgroup")),
+        data = survdata
+      )
+  p <- dF(pchisq(sdiff$chisq, length(sdiff$n) - 1, lower.tail = FALSE), 3, p = TRUE)
+    
+  if (exists("outir")) {
+    outir <<- rbind(outir, c(eventname, ir, p))} else{
+      outir <<- c(eventname, ir, p)
+    }
+}
+
+irfunc(eventname = "All-cause death", time = "outtime_death", event = "out_death")
+irfunc(eventname = "CV death", time = "outtime_death", event = "out_deathcv")
+irfunc(eventname = "CV death (excl HF))", time = "outtime_death", event = "out_deathcv_exclhf")
+irfunc(eventname = "Non-cv death", time = "outtime_death", event = "out_deathnoncv")
+irfunc(eventname = "HF death", time = "outtime_death", event = "out_deathhf")
+irfunc(eventname = "Sudden cardiac death", time = "outtime_death", event = "out_deathscd")
+irfunc(eventname = "Unknown death", time = "outtime_death", event = "out_deathunknown")
+irfunc(eventname = "All-cause hospitalisation", time = "outtime_hosp", event = "out_hosp")
+irfunc(eventname = "CV hospitalisation", time = "outtime_hospcv", event = "out_hospcv")
+irfunc(eventname = "CV hospitalisation (excl HF)", time = "outtime_hospcv_exclhf", event = "out_hospcv_exclhf")
+irfunc(eventname = "Non-cv hospitalisation", time = "outtime_hospnoncv", event = "out_hospnoncv")
+irfunc(eventname = "HF hospitalisation", time = "outtime_hosphf", event = "out_hosphf")
+irfunc(eventname = "All-cause death or HF hospitalisation", time = "outtime_hosphf", event = "out_deathhosphf")
+irfunc(eventname = "CV death or HF hospitalisation", time = "outtime_hosphf", event = "out_deathcvhosphf")
+
+colnames(outir) <- c("Outcome", "pEF", "mrEF", "rEF", "p-value")
+
+myHeader <- c(" " = 1, "no events, sum py, IR (95% CI)" = 3, " " = 1)
+names(myHeader) <- c(" ", "no events, sum py, IR (95% CI)", " ")
+
+footnote(mykable(outir, caption = "Incidence rates") %>% 
+           add_header_above(myHeader),
+         general = c(
+      "Incidence per 100 py was calculated with 95% Poisson confidence intervals. P-value is from log-rank test."))
+```
+
+

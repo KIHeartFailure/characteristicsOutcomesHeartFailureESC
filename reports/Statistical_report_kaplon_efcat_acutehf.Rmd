@@ -1,0 +1,171 @@
+---
+title: 'Statistical report: Characteristics, outcomes and prognostic factors of hospitalized patients with heart failure with preserved and mid-range ejection fraction in comparison to patients with reduced ejection fraction – insights from the ESC Heart Failure Long-Term Registry'
+subtitle: 'DRAFT'
+author: 'Statistician: Lina Benson'
+  
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    fig_caption: yes
+    fig_height: 7
+    fig_width: 7
+    number_sections: yes
+link-citations: yes
+bibliography: references.bib
+nocite: '@*'
+header-includes:
+   - \usepackage{draftwatermark}
+---
+
+\newpage 
+\tableofcontents 
+\listoffigures
+\listoftables
+\newpage
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, include = TRUE, comment = "",
+  warning = FALSE, message = FALSE, fig.pos = "H",
+  fig.path = "../output/figs/"
+)
+options(knitr.kable.NA = "")
+```
+
+```{r adjust_directory_if_needed, include=FALSE}
+# Uncomment lines below if rmd file is placed in a subdirectory
+knitr::opts_knit$set(root.dir = normalizePath("../"))
+```
+
+```{r load_project}
+# 1. Set options in config/global.dcf
+# 2. Load packages listed in config/global.dcf
+# 3. Import functions and code in lib directory
+
+ProjectTemplate::reload.project()
+
+# if cache should be on
+cacheon <- TRUE
+```             
+
+# Data handling
+
+## Files
+
+hf3_lt_fu_data_soladis_jan19.sas7bdat (from the folder DATABASE_ANALYZED.ZIP). 
+
+## Inclusion/exclusion criteria
+
+```{r flow}
+mykable(flow, caption = "Flowchart")
+mykable(outdistef, caption = "EF distrubution for excluded patients", scale_down = FALSE)
+```
+
+First patient in: `r min(pdata$num_dmVisitdt)` and last patient in: `r max(pdata$num_dmVisitdt)`. 
+
+## Outcome
+
+Note that patients with missing information on cause of death or hospitalisation 
+are neither included in the CV death/hospitalisation or non-cv death/hospitalisation. 
+
+Time is from date of discharge, or if this is missing, date of admission, 
+to the respective outcome, death or last follow-up, whatever came first. 
+
+# Statistical analysis 
+
+## General
+
+All analyses were performed using `r sessionInfo()$R.version$version.string` [@r]. 
+The level of significance is set to 5%, two-sided. No adjustment for multiple 
+comparisons were made and therefore the results should be viewed with some care.
+
+## Missing data
+
+For patients with missing information on the date of hospitalisation, 
+`r paste0(dF(prop.table(table(pdata$outtime_hospmissing))[2] * 100, 1), "%")`, 
+of all hospitalisations, the time to hospitalisation was imputed with half the time to last
+follow-up. Further, times to hospitalisation that were larger than time 
+to death or last follow-up were set to death or last follow-up. 
+
+Missing data for the covariates included in the models was imputed with multiple 
+imputation using mice [@mice] for 10 datasets and 10 iterations. 
+Variables included in the imputation model are the same as are 
+included in the cox regression. Death was included as the Nelson-Aalen estimator 
+in the imputation model. 
+
+## Descriptive statistics
+
+Test are partly performed "overall", partly between each separate EF group 
+(excluding patients from the third EF group) and partly, for categorical variables > 2 levels, 
+for each separate level against all other levels grouped together as one group. 
+
+```{r, child = "../src/base_tab.Rmd"}
+
+```
+
+## Outcome
+
+All outcome analysis are performed excluding patients that died in hospital and 
+were lost to follow-up. 
+
+Incidence per 1000 py was calculated with 95% Poisson confidence intervals. 
+Difference between EF groups is tested with log-rank test. 
+Note that the log-rank test is theoretically 
+redundant since the cox regression gives the same information. 
+
+The outcomes are presented with the 1 - Kaplan-Meier curves.
+
+Cox proportional hazards regressions were used to evaluate possible predictors of 
+outcome for all-cause mortality and first HF hospitalization. The coeffs in the 
+respective EF groups were modelled using interactions with the respective variables. 
+So the multivariable model is not ONE model but one model / variable since the 
+interaction term needs to be included. 
+
+### Assumptions
+
+The proportional hazards assumption was investigated using the scaled Schoenfeld 
+residuals (cox.zph in [@survival-package]). 
+Possible outliers were visually inspected by plotting the dfbetas. 
+
+```{r, child = "../src/out309012.Rmd"}
+
+```
+
+```{r, child = "../src/incidencerates.Rmd"}
+
+```
+
+\clearpage
+
+```{r, child = "../src/km.Rmd"}
+
+```
+
+\clearpage
+
+```{r, child = "../src/cox.Rmd"}
+
+```
+
+\clearpage
+
+# Reproducibility
+
+## R session information {#sessioninfo}
+
+`r sessionInfo()$R.version$version.string` [@r] is used, for more details see below.
+
+```{r sessinfo}
+sessionInfo()
+```
+
+## R code
+
+The R code for all data handling and statistical analyses will be made public 
+https://github.com/KIHeartFailure/characteristicsOutcomesHeartFailureESC 
+after publication. It is therefore possible to link to it from the resulting article 
+for increased transparency and code sharing. No data or output is stored in the 
+repository. 
+
+# References

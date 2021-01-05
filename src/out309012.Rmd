@@ -1,0 +1,37 @@
+```{r event, cache=cacheon}
+outtimefunc <- function(eventname, time, event) {
+  
+  ## 30, 19 d, 12 mo (from survfit)
+  fit <- survfit(formula(paste0("Surv(", time, ",", event, "== 1) ~ d_efgroup")),
+    data = survdata
+  )
+
+  sfit <- summary(fit, times = c(30, 90, 365))
+
+  survs <- matrix(paste0(
+    dF(100 - sfit$surv * 100, dig = 1), " (",
+    dF(100 - sfit$upper * 100, dig = 1), "-",
+    dF(100 - sfit$lower * 100, dig = 1), ")"
+  ), nrow = 3)
+
+  if (exists("outp")) {
+    outp <<- rbind(outp, cbind(paste0(eventname, c(" 30 days", " 90 days", " 12 months")), survs))} else{
+      outp <<- cbind(paste0(eventname, c(" 30 days", " 90 days", " 12 months")), survs)
+    }
+}
+
+outtimefunc(eventname = "All-cause death", time = "outtime_death", event = "out_death")
+outtimefunc(eventname = "HF hospitalisation", time = "outtime_hosphf", event = "out_hosphf")
+outtimefunc(eventname = "All-cause hospitalisation", time = "outtime_hosp", event = "out_hosp")
+outtimefunc(eventname = "All-cause death or HF hospitalisation", time = "outtime_hosphf", event = "out_deathhosphf")
+
+colnames(outp) <- c("Outcome", "pEF", "mrEF", "rEF")
+
+myHeader <- c(" " = 1, "% (95% CI)" = 3)
+names(myHeader) <- c(" ", "% (95% CI)")
+
+mykable(outp, caption = "Outcomes at 30-day, 90-day and 12 months") %>% 
+           add_header_above(myHeader)
+```
+
+

@@ -1,0 +1,370 @@
+```{r cox, cache=cacheon}
+coxfunc <- function(time, event) {
+  eflevs <- levels(survdata %>% pull(d_efgroup))
+
+  modnames <- coxph(formula(paste0("Surv(", time, ",", event, " == 1) ~ ", paste0(modvars, collapse = " + "))), data = survdata)
+  modnames <- names(modnames$coefficients)
+  nm <- length(modnames)
+
+  out <- data.frame(matrix(NA, ncol = 18, nrow = nm))
+  colnames(out) <- c(
+    "vars", "pEFuni", "pEFmult", "mrEFuni", "mrEFmult", "rEFuni", "rEFmult", "pintuni", "pintmult",
+    "loghrpEF", "lcipEF", "ucipEF",
+    "loghrmrEF", "lcimrEF", "ucimrEF",
+    "loghrrEF", "lcirEF", "ucirEF"
+  )
+  out[, "vars"] <- modnames
+
+  if (nm != length(modvars)) stop("some variables have > 2 levels")
+
+  for (i in seq_along(modvars)) {
+    for (j in seq_along(eflevs)) {
+      ## uni cox
+      amod <- with(imp, coxph(formula(paste0(
+        "Surv(", time, ",", event, " == 1) ~ ", modvars[i], " * relevel(d_efgroup, '", eflevs[j], "')"
+      ))))
+
+      ## df the number of events minus the regression coefficients.
+      ## There is support for this from middle of page 149 of the book by Parmer & Machin (ISBN 0471936405)
+      asmod <- summary(pool(amod,
+        dfcom =
+          (amod$analyses[[1]]$nevent - length(amod$analyses[[1]]$coefficients))
+      ))
+
+      if (j == 1) {
+        pint <- with(imp, car::Anova(coxph(formula(paste0(
+          "Surv(", time, ",", event, " == 1) ~ ", modvars[i], " * relevel(d_efgroup, '", eflevs[j], "')"
+        ))),
+        type = "III", test.statistic = "Wald"
+        ))
+
+        #    mod <- coxph(formula(paste0(
+        #     "Surv(", time, ",", event, " == 1) ~ ", modvars[i, "vars"], " * relevel(d_efgroup, '", j, "')"
+        #    )), data = survdata)
+
+        # s <- car::Anova(mod, type = 3, test.statistic = "Wald")
+
+        nc <- length(pint$analyses[[1]]$Chisq)
+
+        chis2 <- c(
+          pint$analyses[[1]]$Chisq[nc],
+          pint$analyses[[2]]$Chisq[nc],
+          pint$analyses[[3]]$Chisq[nc],
+          pint$analyses[[4]]$Chisq[nc],
+          pint$analyses[[5]]$Chisq[nc],
+          pint$analyses[[6]]$Chisq[nc],
+          pint$analyses[[7]]$Chisq[nc],
+          pint$analyses[[8]]$Chisq[nc],
+          pint$analyses[[9]]$Chisq[nc],
+          pint$analyses[[10]]$Chisq[nc]
+        )
+
+        dk.comb <- dF(miceadds::micombine.chisquare(
+          dk = chis2, df = pint$analyses[[1]]$Df[nc],
+          display = FALSE
+        )[2], dig = 3, p = TRUE)
+
+        out[i, "pintuni"] <- dk.comb
+      }
+
+      out[i, paste0(eflevs[j], "uni")] <- paste0(
+        dF(exp(asmod$estimate[1]), dig = 1),
+        " (", dF(exp(asmod$estimate[1] - global_z05 * asmod$std.error[1]), dig = 1),
+        "-", dF(exp(asmod$estimate[1] + global_z05 * asmod$std.error[1]), dig = 1), "), ",
+        dF(asmod$p.value[1], dig = 3, p = TRUE)
+      )
+
+      # mult
+      amod <- with(imp, coxph(formula(paste0(
+        "Surv(", time, ",", event, " == 1) ~ ", modvars[i], " * relevel(d_efgroup, '", eflevs[j], "') + ",
+        paste0(modvars[modvars != modvars[i]], collapse = " + ")
+      ))))
+
+      ## df the number of events minus the regression coefficients.
+      ## There is support for this from middle of page 149 of the book by Parmer & Machin (ISBN 0471936405)
+      asmod <- summary(pool(amod,
+        dfcom =
+          (amod$analyses[[1]]$nevent - length(amod$analyses[[1]]$coefficients))
+      ))
+
+      if (j == 1) {
+        pint <- with(imp, car::Anova(coxph(formula(paste0(
+          "Surv(", time, ",", event, " == 1) ~ ", modvars[i], " * relevel(d_efgroup, '", eflevs[j], "') + ",
+          paste0(modvars[modvars != modvars[i]], collapse = " + ")
+        ))),
+        type = "III", test.statistic = "Wald"
+        ))
+
+        nc <- length(pint$analyses[[1]]$Chisq)
+
+        chis2 <- c(
+          pint$analyses[[1]]$Chisq[nc],
+          pint$analyses[[2]]$Chisq[nc],
+          pint$analyses[[3]]$Chisq[nc],
+          pint$analyses[[4]]$Chisq[nc],
+          pint$analyses[[5]]$Chisq[nc],
+          pint$analyses[[6]]$Chisq[nc],
+          pint$analyses[[7]]$Chisq[nc],
+          pint$analyses[[8]]$Chisq[nc],
+          pint$analyses[[9]]$Chisq[nc],
+          pint$analyses[[10]]$Chisq[nc]
+        )
+
+
+        dk.comb <- dF(miceadds::micombine.chisquare(
+          dk = chis2, df = pint$analyses[[1]]$Df[nc],
+          display = FALSE
+        )[2], dig = 3, p = TRUE)
+
+        out[i, "pintmult"] <- dk.comb
+      }
+
+      out[i, paste0(eflevs[j], "mult")] <- paste0(
+        dF(exp(asmod$estimate[1]), dig = 1),
+        " (", dF(exp(asmod$estimate[1] - global_z05 * asmod$std.error[1]), dig = 1),
+        "-", dF(exp(asmod$estimate[1] + global_z05 * asmod$std.error[1]), dig = 1), "), ",
+        dF(asmod$p.value[1], dig = 3, p = TRUE)
+      )
+
+      out[i, paste0("loghr", eflevs[j])] <- asmod$estimate[1]
+      out[i, paste0("lci", eflevs[j])] <- asmod$estimate[1] - global_z05 * asmod$std.error[1]
+      out[i, paste0("uci", eflevs[j])] <- asmod$estimate[1] + global_z05 * asmod$std.error[1]
+    }
+  }
+  return(out)
+}
+```
+
+```{r coxprint, cache=cacheon, dependson="cox"}
+
+coxprint <- function(coxdata, eventname) {
+  coxdataprint <- coxdata %>%
+    select(-starts_with("loghr"), -starts_with("lci"), -starts_with("uci"))
+
+  colnames(coxdataprint) <- c("Variable", rep(c("Crude HR (95% CI), p-value", "Adjusted HR (95% CI), p-value"), 3), "Crude", "Adjusted")
+
+  myHeader <- c(" " = 1, "pEF" = 2, "mrEF" = 2, "rEF" = 2, "P interaction" = 2)
+  names(myHeader) <- c(" ", "pEF", "mrEF", "rEF", "P interaction")
+
+  mykable(coxdataprint,
+    caption = eventname,
+    fontsize = 8,
+    escape = TRUE
+  ) %>%
+    add_header_above(myHeader) %>%
+    landscape()
+}
+```
+
+```{r coxfig, cache=cacheon, dependson="cox"}
+
+coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxisno2 = NULL) {
+  shell <- data.frame(vars = c(
+    "Baseline characteristics:",
+    "d_age_cat>=65",
+    "d_dmHF_catPrevious HF hosp",
+    "num_dmStrokeYes",
+    "d_dmAfib2Yes",
+    "d_dmDiabYes",
+    "num_dmCopdYes",
+    "num_dmHepaYes",
+    "num_dmDisYes",
+    "Reason for HF decompensation:",
+    "num_hsFacAfYes",
+    "num_hsFacMyYes",
+    "num_hsFacInfYes",
+    "num_hsFacRenYes",
+    "num_hsFacUnhYes",
+    "In-hospital findings/treatment:",
+    "num_dcMitRegYes",
+    "num_dcTriCusYes",
+    "num_hsIntrYes",
+    "Discharge findings:",
+    "d_dcBp1_cat<110",
+    "d_dcNyha_catIII-IV",
+    "d_dcSod_cat<135",
+    "d_dcHb_cat<12/13(women/men)"
+  ))
+
+  coxdata <- left_join(shell, coxdata, by = "vars") %>%
+    mutate(
+      nameforest = case_when(
+        vars == "d_age_cat>=65" ~ "  Age >=65 vs <65",
+        vars == "d_dmHF_catPrevious HF hosp" ~ "  Previous HF hospitalization",
+        vars == "num_dmStrokeYes" ~ "  Previous stroke/TIA",
+        vars == "d_dmAfib2Yes" ~ "  Atrial fibrillation",
+        vars == "d_dmDiabYes" ~ "  Diabetes",
+        vars == "num_dmCopdYes" ~ "  COPD",
+        vars == "num_dmHepaYes" ~ "  Hepatic dysfunction",
+        vars == "num_dmDisYes" ~ "  Cancer disease",
+
+        vars == "num_hsFacAfYes" ~ "  Atrial fibrillation",
+        vars == "num_hsFacMyYes" ~ "  Myocardial ischemia",
+        vars == "num_hsFacInfYes" ~ "  Infection",
+        vars == "num_hsFacRenYes" ~ "  Renal dysfunction",
+        vars == "num_hsFacUnhYes" ~ "  Uncontrolled hypertension",
+
+        vars == "num_dcMitRegYes" ~ "  Mitral regurgitation*",
+        vars == "num_dcTriCusYes" ~ "  Tricuspid regurgitation*",
+        vars == "num_hsIntrYes" ~ "  Inotropic support",
+
+        vars == "d_dcBp1_cat<110" ~ "  SBP <110 vs >=110",
+        vars == "d_dcNyha_catIII-IV" ~ "  NYHA III-IV",
+        vars == "d_dcSod_cat<135" ~ "  Hyponatremia**",
+        vars == "d_dcHb_cat<12/13(women/men)" ~ "  Anemia***",
+        TRUE ~ vars
+      )
+    ) %>%
+    arrange(n():1)
+
+  # exp(min(as.numeric(c(coxdata$lcipEF, coxdata$lcimrEF, coxdata$lcirEF)), na.rm = T))
+  # exp(max(as.numeric(c(coxdata$ucipEF, coxdata$ucimrEF, coxdata$ucirEF)), na.rm = T))
+
+  cextext <- 0.9
+
+  # c(bottom, left, top, right)
+  par(mar = c(2, 12, 0, 0) + 0.2)
+
+  # pef
+  plot(coxdata$loghrpEF, 1:nrow(coxdata),
+    xlab = "",
+    xlim = c(
+      log(xmin),
+      7.2
+    ),
+    ylim = c(1, nrow(coxdata) + 1),
+    axes = FALSE,
+    ylab = NA,
+    cex.lab = cextext,
+    main = NA,
+    cex = 1.1,
+    type = "p",
+    pch = 22,
+    bg = global_kicols[1],
+    col = global_kicols[1]
+  )
+  for (i in 1:nrow(coxdata)) {
+    matplot(c(coxdata$lcipEF[i], coxdata$ucipEF[i]), c(i, i),
+      type = "l", add = TRUE, col = global_kicols[1], cex = 2
+    )
+  }
+  # mref
+  matplot(coxdata$loghrmrEF + add1, 1:nrow(coxdata),
+    cex = 1,
+    type = "p",
+    pch = 22,
+    bg = global_kicols[1],
+    col = global_kicols[1],
+    add = TRUE
+  )
+  for (i in 1:nrow(coxdata)) {
+    matplot(c(coxdata$lcimrEF[i] + add1, coxdata$ucimrEF[i] + add1), c(i, i),
+      type = "l", add = TRUE, col = global_kicols[1], cex = 2
+    )
+  }
+  # ref
+  matplot(coxdata$loghrrEF + add2, 1:nrow(coxdata),
+    cex = 1,
+    type = "p",
+    pch = 22,
+    bg = global_kicols[1],
+    col = global_kicols[1],
+    add = TRUE
+  )
+  for (i in 1:nrow(coxdata)) {
+    matplot(c(coxdata$lcirEF[i] + add2, coxdata$ucirEF[i] + add2), c(i, i),
+      type = "l", add = TRUE, col = global_kicols[1], cex = 2
+    )
+  }
+
+  matplot(c(0, 0), c(-1, nrow(coxdata) + 0.5), type = "l", lty = 3, add = TRUE, col = "black")
+  matplot(c(add1, add1), c(-1, nrow(coxdata) + 0.5), type = "l", lty = 3, add = TRUE, col = "black")
+  matplot(c(add2, add2), c(-1, nrow(coxdata) + 0.5), type = "l", lty = 3, add = TRUE, col = "black")
+
+  axis(1,
+    cex.axis = cextext, at = log(axismy),
+    labels = axismy
+  )
+  axis(1,
+    cex.axis = cextext, at = log(axismy) + add1,
+    labels = axismy
+  )
+  axis(1,
+    cex.axis = cextext, at = log(axismy) + add2,
+    labels = axismy
+  )
+  if (!is.null(addaxisno1)) {
+    axis(1,
+      cex.axis = cextext, at = log(addaxisno1),
+      labels = addaxisno1
+    )
+    axis(1,
+      cex.axis = cextext, at = log(addaxisno1) + add1,
+      labels = addaxisno1
+    )
+    axis(1,
+      cex.axis = cextext, at = log(addaxisno1) + add2,
+      labels = addaxisno1
+    )
+  }
+  if (!is.null(addaxisno2)) {
+    axis(1,
+      cex.axis = cextext, at = log(addaxisno2),
+      labels = addaxisno2
+    )
+    axis(1,
+      cex.axis = cextext, at = log(addaxisno2) + add1,
+      labels = addaxisno2
+    )
+    axis(1,
+      cex.axis = cextext, at = log(addaxisno2) + add2,
+      labels = addaxisno2
+    )
+  }
+
+  axis(2,
+    at = 1:nrow(coxdata),
+    labels = c(
+      "  Anemia***", "  Hyponatremia**", "  NYHA III-IV",
+      expression("  SBP <110 vs ">="110"), expression(bold("Discharge findings:")),
+      "  Inotropic support",
+      "  Tricuspid regurgitation*", "  Mitral regurgitation*",
+      expression(bold("In-hospital findings/treatment:")),
+      "  Uncontrolled hypertension", "  Renal dysfunction", "  Infection",
+      "  Myocardial ischemia", "  Atrial fibrillation", expression(bold("Reason for HF decompensation:")),
+      "  Cancer disease", "  Hepatic dysfunction", "  COPD",
+      "  Diabetes", "  Atrial fibrillation", "  Previous stroke/TIA",
+      "  Previous HF hospitalization", expression("  Age ">="65 vs <65"), expression(bold("Baseline characteristics:"))
+    ),
+    cex.axis = cextext, tick = FALSE, las = 2, line = 11, hadj = 0
+  )
+
+  text(0, (nrow(coxdata) + 1), "HFpEF", cex = cextext)
+  text(add1, (nrow(coxdata) + 1), "HFmrEF", cex = cextext)
+  text(add2, (nrow(coxdata) + 1), "HFrEF", cex = cextext)
+}
+```
+
+```{r coxdeath, cache=cacheon, dependson="cox"}
+coxdatadeath <- coxfunc(time = "outtime_death", event = "out_death")
+```
+
+```{r coxdeathprint, cache=cacheon, dependson="coxprint"}
+coxprint(coxdatadeath, eventname = "Predictors cox regression - All-cause death")
+```
+
+```{r coxdeathforest, cache=cacheon, dependson="coxfig", fig.cap="Predictors cox regression - All-cause death"}
+coxfig(coxdatadeath, add1 = 3, add2 = 6, xmin = 0.3, axismy = c(0.3, 0.6, 1, 2, 3, 4), addaxisno1 = 1, addaxisno2 = 3)
+```
+
+```{r coxhfhosp, cache=cacheon, dependson="cox"}
+coxdatahfhosp <- coxfunc(time = "outtime_hosphf", event = "out_hosphf")
+```
+
+```{r coxhfhospprint, cache=cacheon, dependson="coxprint"}
+coxprint(coxdatahfhosp, eventname = "Predictors cox regression - HF hospitalisation")
+```
+
+```{r coxhfhospforest, cache=cacheon, dependson="coxfig", fig.cap="Predictors cox regression - HF hospitalisation"}
+coxfig(coxdatahfhosp, add1 = 3.1, add2 = 6.2, xmin = 0.2, axismy = c(0.2, 0.4, 1, 2, 3), addaxisno1 = 0.4, addaxisno2 = 3)
+```
