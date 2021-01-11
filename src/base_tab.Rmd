@@ -1,34 +1,55 @@
 ```{r tab1all, cache=cacheon}
-table1(data = pdata, name = "Baseline characteristics - All", subset = quote(!is.na(num_age)), 
-       stratvar = "d_efgroup", vars = tab1vars)
+table1(
+  data = pdata, name = "Baseline characteristics - All", 
+  subset = quote(!is.na(num_age)),
+  stratvar = "d_efgroup", vars = tab1vars
+)
 ```
 
 ```{r tab1ex, cache=cacheon}
-table1(data = pdata, name = "Baseline characteristics - Excl died in hospital or lost to follow-up", subset = quote(pop_outcome == 1), 
-       stratvar = "d_efgroup", vars = tab1vars)
+table1(
+  data = pdata, name = "Baseline characteristics - Patients used in outcome analysis", 
+  subset = quote(pop_outcome == 1),
+  stratvar = "d_efgroup", vars = tab1vars
+)
 ```
 
 ```{r tab2all, cache=cacheon}
-table1(data = pdata, name = "Clinical course - All", subset = quote(!is.na(num_age)), 
-       stratvar = "d_efgroup", vars = tab2vars)
+table1(
+  data = pdata, name = "Clinical course - All", 
+  subset = quote(!is.na(num_age)),
+  stratvar = "d_efgroup", vars = tab2vars
+)
 ```
 
 ```{r tab2ex, cache=cacheon}
-table1(data = pdata, name = "Clinical course - Excl died in hospital or lost to follow-up", subset = quote(pop_outcome == 1), 
-       stratvar = "d_efgroup", vars = tab2vars)
+table1(
+  data = pdata, name = "Clinical course - Patients used in outcome analysis", 
+  subset = quote(pop_outcome == 1),
+  stratvar = "d_efgroup", vars = tab2vars
+)
 ```
 
 ```{r tab3all, cache=cacheon}
-table1(data = pdata, name = "Clinical course cont. - Excl died in hospital", subset = quote(num_dcVital == "Alive"), 
-       stratvar = "d_efgroup", vars = tab3vars)
+table1(
+  data = pdata, name = "Clinical course cont. - Patients alive at disharge", 
+  subset = quote(num_dcVital == "Alive"),
+  stratvar = "d_efgroup", vars = tab3vars
+)
 ```
 
 ```{r tab3ex, cache=cacheon}
-table1(data = pdata, name = "Clinical course cont. - Excl died in hospital or lost to follow-up", subset = quote(pop_outcome == 1), 
-       stratvar = "d_efgroup", vars = tab3vars)
+table1(
+  data = pdata, name = "Clinical course cont. - Patients used in outcome analysis", 
+  subset = quote(pop_outcome == 1),
+  stratvar = "d_efgroup", vars = tab3vars
+)
 ```
 
 ```{r tab4ex, cache=cacheon}
-table1(data = pdata, name = "Clinical course 1 yr follow-up - Excl died in hospital or lost to follow-up", subset = quote(pop_outcome == 1), 
-       stratvar = "d_efgroup", vars = tab4vars)
+table1(
+  data = pdata, name = "Clinical course 1 yr follow-up - Patients used in outcome analysis", 
+  subset = quote(pop_outcome == 1),
+  stratvar = "d_efgroup", vars = tab4vars
+)
 ```

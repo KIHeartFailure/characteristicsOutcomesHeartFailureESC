@@ -15,11 +15,13 @@ flow <- rbind(flow, c("EF assessment (Echo-Doppler) during hospitalisation", nro
 pdata <- pdata %>%
   filter((num_hsAcs == "No" | is.na(num_hsAcs)) & (num_hsHosPresCli != "ACS/HF" | is.na(num_hsHosPresCli))) %>%
   mutate(num_hsHosPresCli = droplevels(num_hsHosPresCli))
-flow <- rbind(flow, c("Excluding patients with reason for hospitalisation as ASC OR Hospital presentaion, clinical profile as ACS/HF", nrow(pdata)))
+flow <- rbind(flow, c("Excluding patients with reason for hospitalisation as ASC or Hospital presentaion, clinical profile as ACS/HF", nrow(pdata)))
 
 pdata <- pdata %>%
   filter(num_dcAorSte == "No" | is.na(num_dcAorSte))
 flow <- rbind(flow, c("Excluding patients with moderate-to-severe aortic stenosis", nrow(pdata)))
+
+flow <- rbind(flow, c("Excluded from outcome analysis", NA))
 
 pdata <- pdata %>%
   mutate(pop_outcome = ifelse(num_dcVital == "Alive", 1, 0))

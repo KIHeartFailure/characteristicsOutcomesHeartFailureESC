@@ -1,6 +1,5 @@
 ---
 title: 'Statistical report: Characteristics, outcomes and prognostic factors of hospitalized patients with heart failure with preserved and mid-range ejection fraction in comparison to patients with reduced ejection fraction – insights from the ESC Heart Failure Long-Term Registry'
-subtitle: 'DRAFT'
 author: 'Statistician: Lina Benson'
   
 date: "`r Sys.Date()`"
@@ -13,14 +12,12 @@ output:
 link-citations: yes
 bibliography: references.bib
 nocite: '@*'
-header-includes:
-   - \usepackage{draftwatermark}
 ---
 
 \newpage 
 \tableofcontents 
-\listoffigures
 \listoftables
+\listoffigures
 \newpage
 
 
@@ -51,7 +48,7 @@ cacheon <- TRUE
 
 # Data handling
 
-## Files
+## Data source
 
 hf3_lt_fu_data_soladis_jan19.sas7bdat (from the folder DATABASE_ANALYZED.ZIP). 
 
@@ -59,18 +56,20 @@ hf3_lt_fu_data_soladis_jan19.sas7bdat (from the folder DATABASE_ANALYZED.ZIP).
 
 ```{r flow}
 mykable(flow, caption = "Flowchart")
-mykable(outdistef, caption = "EF distrubution for excluded patients", scale_down = FALSE)
+mykable(outdistef, caption = "EF distribution for excluded patients", scale_down = FALSE)
 ```
 
 First patient in: `r min(pdata$num_dmVisitdt)` and last patient in: `r max(pdata$num_dmVisitdt)`. 
 
-## Outcome
-
-Note that patients with missing information on cause of death or hospitalisation 
-are neither included in the CV death/hospitalisation or non-cv death/hospitalisation. 
-
-Time is from date of discharge, or if this is missing, date of admission, 
-to the respective outcome, death or last follow-up, whatever came first. 
+The median age (IQR) is `r pdata %>% summarise(med = dF(median(num_age), dig = 1),
+                                             q1 = dF(quantile(num_age, probs = 0.25), dig = 1),
+                                             q3 = dF(quantile(num_age, probs = 0.75), dig = 1)) %>%
+                                   mutate(out = paste0(med, " (", q1, "-", q3, ")")) %>%
+                                   pull(out)` and 
+`r pdata %>% count(num_dmgender) %>%
+  mutate(perc = dF(n / sum(n) * 100, 1)) %>%
+  filter(num_dmgender == "Female") %>%
+  pull(perc)`% females.  
 
 # Statistical analysis 
 
@@ -106,13 +105,17 @@ for each separate level against all other levels grouped together as one group.
 
 ## Outcome
 
-All outcome analysis are performed excluding patients that died in hospital and 
-were lost to follow-up. 
+All outcome analysis are performed excluding patients that died in hospital, 
+were lost to follow-up or died prior to discharge (probably due to error in reporting). 
+
+Note that patients with missing information on cause of death or hospitalisation 
+are neither included in the CV death/hospitalisation or non-cv death/hospitalisation. 
+
+Time is from date of discharge, or if this is missing, date of admission and 
+censored at death not defined as an event or follow-up.  
 
 Incidence per 1000 py was calculated with 95% Poisson confidence intervals. 
 Difference between EF groups is tested with log-rank test. 
-Note that the log-rank test is theoretically 
-redundant since the cox regression gives the same information. 
 
 The outcomes are presented with the 1 - Kaplan-Meier curves.
 
@@ -128,6 +131,15 @@ The proportional hazards assumption was investigated using the scaled Schoenfeld
 residuals (cox.zph in [@survival-package]). 
 Possible outliers were visually inspected by plotting the dfbetas. 
 
+The median (min-max) follow-up is 
+`r survdata %>% summarise(med = dF(median(outtime_death / 365.25 * 12), dig = 1),
+                                             min = dF(min(outtime_death / 365.25 * 12), dig = 1),
+                                             max = dF(max(outtime_death / 365.25 * 12), dig = 1)) %>%
+                                   mutate(out = paste0(med, " (", min, "-", max, ")")) %>%
+                                   pull(out)` months for a total of 
+                                   `r survdata %>% summarise(sumpy = dF(sum(outtime_death) / 365.25, dig = 0)) %>%
+                                   pull(sumpy)` patient-years of follow-up.
+                                   
 ```{r, child = "../src/out309012.Rmd"}
 
 ```

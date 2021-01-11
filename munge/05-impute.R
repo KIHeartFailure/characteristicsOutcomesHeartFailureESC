@@ -16,7 +16,7 @@ pred <- ini$pred
 pred[, noimpvars] <- 0
 pred[noimpvars, ] <- 0 # redundant
 
-# change method used in imputation to prop odds model
+# change method used in imputation
 meth <- ini$method
 meth[noimpvars] <- ""
 

@@ -1,6 +1,6 @@
 ```{r event, cache=cacheon}
 outtimefunc <- function(eventname, time, event) {
-  
+
   ## 30, 19 d, 12 mo (from survfit)
   fit <- survfit(formula(paste0("Surv(", time, ",", event, "== 1) ~ d_efgroup")),
     data = survdata
@@ -15,9 +15,10 @@ outtimefunc <- function(eventname, time, event) {
   ), nrow = 3)
 
   if (exists("outp")) {
-    outp <<- rbind(outp, cbind(paste0(eventname, c(" 30 days", " 90 days", " 12 months")), survs))} else{
-      outp <<- cbind(paste0(eventname, c(" 30 days", " 90 days", " 12 months")), survs)
-    }
+    outp <<- rbind(outp, cbind(paste0(eventname, c(" 30 days", " 90 days", " 12 months")), survs))
+  } else {
+    outp <<- cbind(paste0(eventname, c(" 30 days", " 90 days", " 12 months")), survs)
+  }
 }
 
 outtimefunc(eventname = "All-cause death", time = "outtime_death", event = "out_death")
@@ -30,8 +31,6 @@ colnames(outp) <- c("Outcome", "pEF", "mrEF", "rEF")
 myHeader <- c(" " = 1, "% (95% CI)" = 3)
 names(myHeader) <- c(" ", "% (95% CI)")
 
-mykable(outp, caption = "Outcomes at 30-day, 90-day and 12 months") %>% 
-           add_header_above(myHeader)
+mykable(outp, caption = "Outcomes at 30 days, 90 days and 12 months") %>%
+  add_header_above(myHeader)
 ```
-
-

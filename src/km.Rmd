@@ -40,7 +40,7 @@ kmfunc <- function(time, event, ylab, yadj = rep(0, 3)) {
     c("HFpEF", "HFmrEF", "HFrEF"),
     las = 1
   )
-  
+
   text(20, 0.4, paste0("Log-rank p ", p), pos = 4)
 }
 ```

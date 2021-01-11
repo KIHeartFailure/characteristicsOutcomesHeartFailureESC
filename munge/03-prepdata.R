@@ -22,15 +22,6 @@ pdata <- pdata %>%
       num_dmBmi >= 25 ~ "2.>=25"
     ),
 
-    #d_dcBp1_cat = factor(case_when(
-    #  num_dcBp1 < 110 ~ 2,
-    #  num_dcBp1 < 140 ~ 1,
-    # num_dcBp1 >= 140 ~ 3
-    #),
-    #levels = 1:3,
-    #labels = c("110-139", "<110", ">=140")
-    #),
-    
     d_dcBp1_cat = factor(case_when(
       num_dcBp1 < 110 ~ 2,
       num_dcBp1 >= 110 ~ 1
@@ -50,7 +41,7 @@ pdata <- pdata %>%
     d_change_Sod = num_dcSod - num_hsSod,
     d_change_Pot = num_dcPot - num_hsPot,
     d_change_Cre = num_dcCre - num_hsCre,
-      
+
     # eGFR according to CKD-EPI
     sex = recode(num_dmgender, "Male" = 1, "Female" = 0),
     ethnicity = case_when(
@@ -61,8 +52,8 @@ pdata <- pdata %>%
     d_hsCKDEPI = nephro::CKDEpi.creat(num_hsCre, sex, num_age, ethnicity),
     d_dcCKDEPI = nephro::CKDEpi.creat(num_dcCre, sex, num_age, ethnicity),
 
-    d_change_CKDEPI = d_dcCKDEPI - d_hsCKDEPI, 
-    
+    d_change_CKDEPI = d_dcCKDEPI - d_hsCKDEPI,
+
     d_dcCKDEPI_cat = factor(case_when(
       d_dcCKDEPI < 60 ~ 2,
       d_dcCKDEPI >= 60 ~ 1
@@ -81,7 +72,7 @@ pdata <- pdata %>%
     ),
 
     d_change_Hb = num_dcHb - num_hsHb,
-    
+
     d_dcBpm_cat = factor(case_when(
       is.na(num_dcBpm) | is.na(num_dcRyth) ~ NA_real_,
       num_dcBpm >= 70 & num_dcRyth %in% c("Sinus", "Other") |
@@ -102,12 +93,10 @@ pdata <- pdata %>%
       num_dmHF == "Yes with previous hospitalisation" ~ "Previous HF hosp",
       TRUE ~ "No previous HF hosp"
     ),
-    diff = as.numeric(num_dmVisitdt - num_dmhdt),
     d_HFdiagnosis = case_when(
       num_dmHF == "No" ~ "<12mo",
-      is.na(diff) ~ NA_character_,
-      diff > 365 ~ ">12mo",
-      TRUE ~ "<12mo"
+      num_dmMonth %in% c("< 6 months", "6 - 12 months") ~ "<12mo",
+      num_dmMonth %in% c("> 12 months") ~ ">12mo"
     ),
 
     num_dmEtio_c1 = relevel(num_dmEtio_c1, ref = "Non-ischemic heart disease"),
@@ -508,27 +497,25 @@ pdata <- pdata %>%
       num_f1hosp5cs == "HF" ~ num_f1hosp5dt
     ),
     outtime_hosphf = as.numeric(out_hosphfdtm - startdtm),
-    #    outtime_hosphfmissing = case_when(out_hosphf == "Yes" & is.na(outtime_hosphf) ~ 1,
-    #                                      out_hosphf == "Yes" ~ 0),
     outtime_hosphf = ifelse(out_hosphf == 1 & is.na(outtime_hosphf), outtime_death / 2, outtime_hosphf),
     outtime_hosphf = pmin(outtime_hosphf, outtime_death, na.rm = TRUE),
 
     # Non-CV
     out_hospnoncv = case_when(
       num_f1lost != "No" ~ NA_real_,
-      num_f1hosp1cs %in% c("Cardiac, non HF", "HF", "Vascular") |
-        num_f1hosp2cs %in% c("Cardiac, non HF", "HF", "Vascular") |
-        num_f1hosp3cs %in% c("Cardiac, non HF", "HF", "Vascular") |
-        num_f1hosp4cs %in% c("Cardiac, non HF", "HF", "Vascular") |
-        num_f1hosp5cs %in% c("Cardiac, non HF", "HF", "Vascular") ~ 1,
+      num_f1hosp1cs %in% c("Non CV", "Renal dysfunction") |
+        num_f1hosp2cs %in% c("Non CV", "Renal dysfunction") |
+        num_f1hosp3cs %in% c("Non CV", "Renal dysfunction") |
+        num_f1hosp4cs %in% c("Non CV", "Renal dysfunction") |
+        num_f1hosp5cs %in% c("Non CV", "Renal dysfunction") ~ 1,
       TRUE ~ 0
     ),
     out_hospnoncvdtm = case_when(
-      num_f1hosp1cs %in% c("Non CV", "HF", "Renal dysfunction") ~ num_f1hosp1dt,
-      num_f1hosp2cs %in% c("Non CV", "HF", "Renal dysfunction") ~ num_f1hosp2dt,
-      num_f1hosp3cs %in% c("Non CV", "HF", "Renal dysfunction") ~ num_f1hosp3dt,
-      num_f1hosp4cs %in% c("Non CV", "HF", "Renal dysfunction") ~ num_f1hosp4dt,
-      num_f1hosp5cs %in% c("Non CV", "HF", "Renal dysfunction") ~ num_f1hosp5dt
+      num_f1hosp1cs %in% c("Non CV", "Renal dysfunction") ~ num_f1hosp1dt,
+      num_f1hosp2cs %in% c("Non CV", "Renal dysfunction") ~ num_f1hosp2dt,
+      num_f1hosp3cs %in% c("Non CV", "Renal dysfunction") ~ num_f1hosp3dt,
+      num_f1hosp4cs %in% c("Non CV", "Renal dysfunction") ~ num_f1hosp4dt,
+      num_f1hosp5cs %in% c("Non CV", "Renal dysfunction") ~ num_f1hosp5dt
     ),
     outtime_hospnoncv = as.numeric(out_hospnoncvdtm - startdtm),
     outtime_hospnoncv = ifelse(out_hospnoncv == 1 & is.na(outtime_hospnoncv), outtime_death / 2, outtime_hospnoncv),
@@ -538,7 +525,6 @@ pdata <- pdata %>%
     out_deathhosphf = ifelse(out_hosphf == 1, 1, out_death),
     # cv death or hf hosp
     out_deathcvhosphf = ifelse(out_hosphf == 1, 1, out_deathcv)
-    
   ) %>%
   mutate(d_no_noncardiac_comorbs = rowSums(select(
     ., num_dmStroke, num_dmPvd, num_dmVte, d_dmDiab,
@@ -549,13 +535,3 @@ pdata <- pdata %>%
     d_anemia
   ) == "Yes")) %>%
   mutate_if(is.character, as.factor)
-
-# fix so label are not inhereted from org variable
-#attr(pdata$d_change_f1Nt, "label") <- "change in NT-prpBNP (1yrFU - admission)"
-#attr(pdata$d_change_f1Bnp, "label") <- "change in BNP (1yrFU - admission)"
-#attr(pdata$d_change_dcNt, "label") <- "change in NT-prpBNP (discharge - admission)"
-#attr(pdata$d_change_dcBnp, "label") <- "change in BNP (discharge - admission)"
-#attr(pdata$d_either_hsNtBnp, "label") <- "NT-prpBNP/BNP at admission"
-#attr(pdata$d_either_dcNtBnp, "label") <- "NT-prpBNP/BNP at discharge"
-#attr(pdata$d_change_weight, "label") <- "change in weight during hosp"
-#attr(pdata$d_LAVI, "label") <- "d_LAVI"

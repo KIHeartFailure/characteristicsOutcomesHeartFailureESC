@@ -38,12 +38,6 @@ coxfunc <- function(time, event) {
         type = "III", test.statistic = "Wald"
         ))
 
-        #    mod <- coxph(formula(paste0(
-        #     "Surv(", time, ",", event, " == 1) ~ ", modvars[i, "vars"], " * relevel(d_efgroup, '", j, "')"
-        #    )), data = survdata)
-
-        # s <- car::Anova(mod, type = 3, test.statistic = "Wald")
-
         nc <- length(pint$analyses[[1]]$Chisq)
 
         chis2 <- c(
@@ -326,7 +320,7 @@ coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxis
     at = 1:nrow(coxdata),
     labels = c(
       "  Anemia***", "  Hyponatremia**", "  NYHA III-IV",
-      expression("  SBP <110 vs ">="110"), expression(bold("Discharge findings:")),
+      expression("  SBP <110 vs " >= "110"), expression(bold("Discharge findings:")),
       "  Inotropic support",
       "  Tricuspid regurgitation*", "  Mitral regurgitation*",
       expression(bold("In-hospital findings/treatment:")),
@@ -334,7 +328,7 @@ coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxis
       "  Myocardial ischemia", "  Atrial fibrillation", expression(bold("Reason for HF decompensation:")),
       "  Cancer disease", "  Hepatic dysfunction", "  COPD",
       "  Diabetes", "  Atrial fibrillation", "  Previous stroke/TIA",
-      "  Previous HF hospitalization", expression("  Age ">="65 vs <65"), expression(bold("Baseline characteristics:"))
+      "  Previous HF hospitalization", expression("  Age " >= "65 vs <65"), expression(bold("Baseline characteristics:"))
     ),
     cex.axis = cextext, tick = FALSE, las = 2, line = 11, hadj = 0
   )

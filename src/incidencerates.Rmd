@@ -1,6 +1,5 @@
 ```{r inc, cache=cacheon}
 irfunc <- function(eventname, time, event) {
-  
   ev <- by(survdata[, event], survdata[, "d_efgroup"], sum)
   s <- by(survdata[, time], survdata[, "d_efgroup"], sum) / 365.25
   r <- epitools::pois.exact(x = ev, pt = s / 100)
@@ -12,16 +11,17 @@ irfunc <- function(eventname, time, event) {
     dF(r$lower, dig = 1), "-",
     dF(r$upper, dig = 1), ")"
   )
-    
+
   sdiff <- survdiff(formula(paste0("Surv(", time, ",", event, "== 1) ~ d_efgroup")),
-        data = survdata
-      )
+    data = survdata
+  )
   p <- dF(pchisq(sdiff$chisq, length(sdiff$n) - 1, lower.tail = FALSE), 3, p = TRUE)
-    
+
   if (exists("outir")) {
-    outir <<- rbind(outir, c(eventname, ir, p))} else{
-      outir <<- c(eventname, ir, p)
-    }
+    outir <<- rbind(outir, c(eventname, ir, p))
+  } else {
+    outir <<- c(eventname, ir, p)
+  }
 }
 
 irfunc(eventname = "All-cause death", time = "outtime_death", event = "out_death")
@@ -44,10 +44,10 @@ colnames(outir) <- c("Outcome", "pEF", "mrEF", "rEF", "p-value")
 myHeader <- c(" " = 1, "no events, sum py, IR (95% CI)" = 3, " " = 1)
 names(myHeader) <- c(" ", "no events, sum py, IR (95% CI)", " ")
 
-footnote(mykable(outir, caption = "Incidence rates") %>% 
-           add_header_above(myHeader),
-         general = c(
-      "Incidence per 100 py was calculated with 95% Poisson confidence intervals. P-value is from log-rank test."))
+footnote(mykable(outir, caption = "Incidence rates") %>%
+  add_header_above(myHeader),
+general = c(
+  "Incidence per 100 py was calculated with 95% Poisson confidence intervals. P-value is from log-rank test."
+)
+)
 ```
-
-
