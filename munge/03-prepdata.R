@@ -192,6 +192,13 @@ pdata <- pdata %>%
     d_change_weight = num_dcWeight - num_dmWeight,
 
     d_days_in_hosp = as.numeric(num_dcDischdt - num_dmVisitdt),
+    d_days_in_hosp_cat = factor(case_when(
+      d_days_in_hosp <= 7 ~ 1,
+      d_days_in_hosp > 7 ~ 2
+    ),
+    levels = 1:2,
+    labels = c("<= 7 days", ">7 days")
+    ),
 
     d_loopDiurd = case_when(
       is.na(num_mdDiurd_c2) ~ NA_character_,
@@ -271,6 +278,14 @@ pdata <- pdata %>%
     d_f1Diurh = case_when(
       num_f1MedAny == "No" ~ "No",
       TRUE ~ as.character(num_f1Diurh)
+    ),
+
+    d_f1loopDiurh = case_when(
+      num_f1MedAny == "No" ~ "No",
+      is.na(num_f1Diurh_c2) ~ NA_character_,
+      num_f1Diurh_c2 %in% c("Flurosemide", "Torasemide", "Bumetanide") |
+        num_f1Diur2h_c2 %in% c("Flurosemide", "Torasemide", "Bumetanide") ~ "Yes",
+      TRUE ~ "No"
     ),
 
     d_f1f1ALh = case_when(
@@ -356,6 +371,10 @@ pdata <- pdata %>%
     d_f1Digoh = case_when(
       num_f1MedAny == "No" ~ "No",
       TRUE ~ as.character(num_f1Digoh)
+    ),
+    d_f1Amih = case_when(
+      num_f1MedAny == "No" ~ "No",
+      TRUE ~ as.character(num_f1Amih)
     ),
 
     d_change_f1Nt = num_f1Nt - num_hsNt,

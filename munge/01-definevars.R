@@ -99,6 +99,7 @@ tab2vars <- c(
   "num_dcPci",
   # In-hospital outcomes
   "d_days_in_hosp",
+  "d_days_in_hosp_cat",
   "num_dcVital"
 )
 
@@ -167,6 +168,7 @@ tab3vars <- c(
 tab4vars <- c(
   # Pharmacotherapy at 1-year follow-up
   "d_f1Diurh",
+  "d_f1loopDiurh",
   "d_f1f1ALh",
   "d_f1_arb_or_ace_or_arni",
   "d_f1ACEh",
@@ -183,6 +185,7 @@ tab4vars <- c(
   "d_f1Nith",
   "d_f1Ivabh",
   "d_f1Digoh",
+  "d_f1Amih",
   # Natriuretic peptides at 1-year follow-up
   "num_f1Nt",
   "num_f1Bnp",
