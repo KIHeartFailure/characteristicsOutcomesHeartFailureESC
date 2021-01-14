@@ -134,6 +134,8 @@ coxfunc <- function(time, event) {
 coxprint <- function(coxdata, eventname) {
   coxdataprint <- coxdata %>%
     select(-starts_with("loghr"), -starts_with("lci"), -starts_with("uci"))
+  
+  write.xlsx(coxdataprint, paste0("./output/tabs/coxtab_", eventname, "_", Sys.Date(), ".xlsx"), rowNames = FALSE)
 
   colnames(coxdataprint) <- c("Variable", rep(c("Crude HR (95% CI), p-value", "Adjusted HR (95% CI), p-value"), 3), "Crude", "Adjusted")
 
