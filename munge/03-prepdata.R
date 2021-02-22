@@ -39,8 +39,11 @@ pdata <- pdata %>%
     ),
 
     d_change_Sod = num_dcSod - num_hsSod,
+    d_changepercent_Sod = (num_dcSod - num_hsSod) / num_hsSod * 100,
     d_change_Pot = num_dcPot - num_hsPot,
+    d_changepercent_Pot = (num_dcPot - num_hsPot) / num_hsPot * 100,
     d_change_Cre = num_dcCre - num_hsCre,
+    d_changepercent_Cre = (num_dcCre - num_hsCre) / num_hsCre * 100,
 
     # eGFR according to CKD-EPI
     sex = recode(num_dmgender, "Male" = 1, "Female" = 0),
@@ -53,6 +56,7 @@ pdata <- pdata %>%
     d_dcCKDEPI = nephro::CKDEpi.creat(num_dcCre, sex, num_age, ethnicity),
 
     d_change_CKDEPI = d_dcCKDEPI - d_hsCKDEPI,
+    d_changepercent_CKDEPI = (d_dcCKDEPI - d_hsCKDEPI) / d_hsCKDEPI * 100,
 
     d_dcCKDEPI_cat = factor(case_when(
       d_dcCKDEPI < 60 ~ 2,
@@ -72,6 +76,7 @@ pdata <- pdata %>%
     ),
 
     d_change_Hb = num_dcHb - num_hsHb,
+    d_changepercent_Hb = (num_dcHb - num_hsHb) / num_hsHb * 100,
 
     d_dcBpm_cat = factor(case_when(
       is.na(num_dcBpm) | is.na(num_dcRyth) ~ NA_real_,
@@ -190,6 +195,7 @@ pdata <- pdata %>%
     d_LAVI = num_dcLavol / d_bsa,
 
     d_change_weight = num_dcWeight - num_dmWeight,
+    d_changepercent_weight = (num_dcWeight - num_dmWeight) / num_dmWeight * 100,
 
     d_days_in_hosp = as.numeric(num_dcDischdt - num_dmVisitdt),
     d_days_in_hosp_cat = factor(case_when(
@@ -378,10 +384,14 @@ pdata <- pdata %>%
     ),
 
     d_change_f1Nt = num_f1Nt - num_hsNt,
+    d_changepercent_f1Nt = (num_f1Nt - num_hsNt) / num_hsNt * 100,
     d_change_f1Bnp = num_f1Bnp - num_hsBnp,
+    d_changepercent_f1Bnp = (num_f1Bnp - num_hsBnp) / num_hsBnp * 100,
 
     d_change_dcNt = num_dcNt - num_hsNt,
+    d_changepercent_dcNt = (num_dcNt - num_hsNt) / num_hsNt * 100,
     d_change_dcBnp = num_dcBnp - num_hsBnp,
+    d_changepercent_dcBnp = (num_dcBnp - num_hsBnp) / num_hsBnp * 100,
 
     d_either_hsNtBnp = coalesce(num_hsNt, num_hsBnp),
     d_either_dcNtBnp = coalesce(num_dcNt, num_dcBnp),

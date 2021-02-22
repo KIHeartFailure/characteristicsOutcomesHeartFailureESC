@@ -4,6 +4,7 @@ tab1vars <- c(
   "num_age",
   "d_age_cat",
   "num_dmgender",
+  "num_dmWeight",
   "num_dmBmi",
   "d_dmBmi_cat",
   "d_dmHF_history",
@@ -109,6 +110,7 @@ tab3vars <- c(
   "num_dcOed",
   # Clinical status at discharge
   "d_change_weight",
+  "d_changepercent_weight",
   "num_dcBpm",
   "d_dcBpm_cat",
   "num_dcBp1",
@@ -119,20 +121,27 @@ tab3vars <- c(
   "num_dcBnp",
   "d_either_dcNtBnp",
   "d_change_dcNt",
+  "d_changepercent_dcNt",
   "d_change_dcBnp",
+  "d_changepercent_dcBnp",
   "num_dcSod",
   "d_dcSod_cat",
   "d_change_Sod",
+  "d_changepercent_Sod",
   "num_dcPot",
   "d_change_Pot",
+  "d_changepercent_Pot",
   "num_dcCre",
   "d_change_Cre",
+  "d_changepercent_Cre",
   "d_dcCKDEPI",
   "d_dcCKDEPI_cat",
   "d_change_CKDEPI",
+  "d_changepercent_CKDEPI",
   "num_dcHb",
   "d_dcHb_cat",
   "d_change_Hb",
+  "d_changepercent_Hb",
 
   # Pharmacotherapy at hospital discharge
   "num_mdDiurd",
@@ -190,7 +199,9 @@ tab4vars <- c(
   "num_f1Nt",
   "num_f1Bnp",
   "d_change_f1Nt",
-  "d_change_f1Bnp"
+  "d_changepercent_f1Nt",
+  "d_change_f1Bnp",
+  "d_changepercent_f1Bnp"
 )
 
 tabrasvars <- c(
