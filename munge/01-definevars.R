@@ -117,6 +117,7 @@ tab3vars <- c(
   "d_dcBp1_cat",
   "num_dcNyha",
   "d_dcNyha_cat",
+  "improvment1class_dcNyha",
   "num_dcNt",
   "num_dcBnp",
   "d_either_dcNtBnp",

@@ -189,6 +189,17 @@ pdata <- pdata %>%
       num_dcNyha %in% c("NYHA III", "NYHA IV") ~ "III-IV"
     ),
 
+    tmp_dcnyha = case_when(num_dcNyha == "NYHA I" ~ 1,
+                           num_dcNyha == "NYHA II" ~ 2,
+                           num_dcNyha == "NYHA III" ~ 3,
+                           num_dcNyha == "NYHA IV" ~ 4), 
+    tmp_hsnyha = case_when(num_hsNyha == "NYHA I" ~ 1,
+                           num_hsNyha == "NYHA II" ~ 2,
+                           num_hsNyha == "NYHA III" ~ 3,
+                           num_hsNyha == "NYHA IV" ~ 4), 
+    
+    improvment1class_dcNyha = if_else(tmp_dcnyha < tmp_hsnyha, "Yes", "No"),
+    
     d_qtcfridericia = ifelse(!num_dcRyth_c1 %in% c("Paced", "Other"), num_dcQt / ((60 / num_dcHr2)^0.33), NA),
 
     d_bsa = sqrt(num_dmHeight * num_dmWeight / 3600),
@@ -563,4 +574,5 @@ pdata <- pdata %>%
     num_dmPark, num_dmRheu,
     d_anemia
   ) == "Yes")) %>%
-  mutate_if(is.character, as.factor)
+  mutate_if(is.character, as.factor) %>%
+  select(-starts_with("tmp_"))
