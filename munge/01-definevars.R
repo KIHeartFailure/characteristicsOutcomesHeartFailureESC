@@ -38,7 +38,9 @@ tab1vars <- c(
   "d_dmSmoking2",
   # Clinical presentation at hospital admission
   "num_dmBpm",
+  "d_dmBpm_cat",
   "num_dmBp1",
+  "d_dmBp1_cat",
   "num_hsHosPresCli",
   "d_hsHosPresCli",
   "num_hsNyha",
@@ -121,6 +123,8 @@ tab3vars <- c(
   "num_dcNt",
   "num_dcBnp",
   "d_either_dcNtBnp",
+  "d_change_either_dcNtBnp", 
+  "d_changepercent_either_dcNtBnp", 
   "d_change_dcNt",
   "d_changepercent_dcNt",
   "d_change_dcBnp",

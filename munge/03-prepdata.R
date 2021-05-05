@@ -22,6 +22,22 @@ pdata <- pdata %>%
       num_dmBmi >= 25 ~ "2.>=25"
     ),
 
+    d_dmBpm_cat = factor(case_when(
+      num_dmBpm <= 80 ~ 1,
+      num_dmBpm > 80 ~ 2
+    ),
+    levels = 1:2,
+    labels = c("<=80", ">80")
+    ),
+    
+    d_dmBp1_cat = factor(case_when(
+      num_dmBp1 <= 140 ~ 1,
+      num_dmBp1 > 140 ~ 2
+    ),
+    levels = 1:2,
+    labels = c("<=140", ">140")
+    ),
+    
     d_dcBp1_cat = factor(case_when(
       num_dcBp1 < 110 ~ 2,
       num_dcBp1 >= 110 ~ 1
@@ -406,7 +422,10 @@ pdata <- pdata %>%
 
     d_either_hsNtBnp = coalesce(num_hsNt, num_hsBnp),
     d_either_dcNtBnp = coalesce(num_dcNt, num_dcBnp),
-
+    
+    d_change_either_dcNtBnp = d_either_dcNtBnp - d_either_hsNtBnp,
+    d_changepercent_either_dcNtBnp = (d_either_dcNtBnp - d_either_hsNtBnp) / d_either_hsNtBnp * 100,
+    
     # Outcomes
     enddtm = coalesce(num_f1DeathDt, num_f1contDt),
     startdtm = coalesce(num_dcDischdt, num_dmVisitdt),
