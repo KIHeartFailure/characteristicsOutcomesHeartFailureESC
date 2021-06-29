@@ -653,6 +653,13 @@
       "Repository": "CRAN",
       "Hash": "b6b150cd4709e0c0c9b5d51ac4376282"
     },
+    "plotrix": {
+      "Package": "plotrix",
+      "Version": "3.8-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cd2248636c86e6716cd7ae086536cecc"
+    },
     "polynom": {
       "Package": "polynom",
       "Version": "1.4-0",

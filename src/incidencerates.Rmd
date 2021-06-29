@@ -1,5 +1,5 @@
 ```{r inc, cache=cacheon}
-irfunc <- function(eventname, time, event) {
+irfunc <- function(eventname, eventnameforest = NULL, time, event) {
   ev <- by(survdata[, event], survdata[, "d_efgroup"], sum)
   s <- by(survdata[, time], survdata[, "d_efgroup"], sum) / 365.25
   r <- epitools::pois.exact(x = ev, pt = s / 100)
@@ -12,6 +12,8 @@ irfunc <- function(eventname, time, event) {
     dF(r$upper, dig = 1), ")"
   )
 
+  irplot <- data.frame(paste0("HF", levels(survdata$d_efgroup)), r$rate, r$lower, r$upper)
+
   sdiff <- survdiff(formula(paste0("Surv(", time, ",", event, "== 1) ~ d_efgroup")),
     data = survdata
   )
@@ -22,24 +24,39 @@ irfunc <- function(eventname, time, event) {
   } else {
     outir <<- c(eventname, ir, p)
   }
+
+  eventnameforest <- if_else(is.null(eventnameforest), eventname, eventnameforest)
+  pforest <- if_else(str_detect(p, "<"), paste0("p", p), paste0("p=", p))
+  if (exists("outirplot")) {
+    outirplot <<- rbind(outirplot, cbind(rep(eventname, 3), rep(eventnameforest, 3), irplot, rep(pforest, 3)))
+  } else {
+    outirplot <<- cbind(rep(eventname, 3), rep(eventnameforest, 3), irplot, rep(pforest, 3))
+  }
 }
 
-irfunc(eventname = "All-cause death", time = "outtime_death", event = "out_death")
+irfunc(eventname = "All-cause death", eventnameforest = "All-cause\ndeath", time = "outtime_death", event = "out_death")
 irfunc(eventname = "CV death", time = "outtime_death", event = "out_deathcv")
-irfunc(eventname = "CV death (excl HF))", time = "outtime_death", event = "out_deathcv_exclhf")
-irfunc(eventname = "Non-cv death", time = "outtime_death", event = "out_deathnoncv")
+irfunc(eventname = "CV death (excl. HF)", eventnameforest = "CV death\n(excl. HF)", time = "outtime_death", event = "out_deathcv_exclhf")
+irfunc(eventname = "Non-CV death", time = "outtime_death", event = "out_deathnoncv")
 irfunc(eventname = "HF death", time = "outtime_death", event = "out_deathhf")
-irfunc(eventname = "Sudden cardiac death", time = "outtime_death", event = "out_deathscd")
+irfunc(eventname = "Sudden cardiac death", eventnameforest = "Sudden cardiac\ndeath", time = "outtime_death", event = "out_deathscd")
 irfunc(eventname = "Unknown death", time = "outtime_death", event = "out_deathunknown")
-irfunc(eventname = "All-cause hospitalisation", time = "outtime_hosp", event = "out_hosp")
-irfunc(eventname = "CV hospitalisation", time = "outtime_hospcv", event = "out_hospcv")
-irfunc(eventname = "CV hospitalisation (excl HF)", time = "outtime_hospcv_exclhf", event = "out_hospcv_exclhf")
-irfunc(eventname = "Non-cv hospitalisation", time = "outtime_hospnoncv", event = "out_hospnoncv")
-irfunc(eventname = "HF hospitalisation", time = "outtime_hosphf", event = "out_hosphf")
-irfunc(eventname = "All-cause death or HF hospitalisation", time = "outtime_hosphf", event = "out_deathhosphf")
-irfunc(eventname = "CV death or HF hospitalisation", time = "outtime_hosphf", event = "out_deathcvhosphf")
+irfunc(eventname = "All-cause hospitalization", eventnameforest = "All-cause\nhospitalization", time = "outtime_hosp", event = "out_hosp")
+irfunc(eventname = "CV hospitalization", time = "outtime_hospcv", event = "out_hospcv")
+irfunc(
+  eventname = "CV hospitalization (excl. HF)", eventnameforest = "CV hospitalization\n(excl. HF)",
+  time = "outtime_hospcv_exclhf", event = "out_hospcv_exclhf"
+)
+irfunc(eventname = "Non-CV hospitalization", eventnameforest = "Non-CV\nhospitalization", time = "outtime_hospnoncv", event = "out_hospnoncv")
+irfunc(eventname = "HF hospitalization", time = "outtime_hosphf", event = "out_hosphf")
+irfunc(
+  eventname = "All-cause death or HF hospitalization", eventnameforest = "All-cause death or\nHF hospitalization",
+  time = "outtime_hosphf", event = "out_deathhosphf"
+)
+irfunc(eventname = "CV death or HF hospitalization", time = "outtime_hosphf", event = "out_deathcvhosphf")
 
 colnames(outir) <- c("Outcome", "pEF", "mrEF", "rEF", "p-value")
+colnames(outirplot) <- c("Outcome", "outforest", "EF", "rate", "lci", "uci", "p")
 
 myHeader <- c(" " = 1, "no events, sum py, IR (95% CI)" = 3, " " = 1)
 names(myHeader) <- c(" ", "no events, sum py, IR (95% CI)", " ")
@@ -50,4 +67,102 @@ general = c(
   "Incidence per 100 py was calculated with 95% Poisson confidence intervals. P-value is from log-rank test."
 )
 )
+```
+
+\clearpage 
+
+```{r incplot, dependson="inc", cache=cacheon}
+
+plotforest <- function(outs, ymax = NULL, pprint = TRUE, addletter = NULL) {
+  global_kicols <- c(global_kicols, "black")
+  plotdata <- outirplot %>%
+    filter(Outcome %in% outs) %>%
+    arrange(match(Outcome, outs), Outcome)
+
+  for (i in rev(seq(4, nrow(plotdata), 3))) {
+    plotdata <- plotdata %>%
+      add_row(.before = i)
+  }
+
+  if (is.null(ymax)) ymax <- max(plotdata$uci, na.rm = T) + 4
+
+  cextext <- 1
+
+  # c(bottom, left, top, right)
+  par(mar = c(4, 4, 0, 0) + 0.2)
+
+  plot(1:nrow(plotdata), plotdata$rate,
+    ylim = c(0, ymax),
+    axes = FALSE,
+    ylab = "Incidence rate per 100 patient-years",
+    xlab = NA,
+    cex.lab = cextext,
+    main = NA,
+    cex = 1.5,
+    type = "p",
+    pch = 22,
+    bg = global_kicols,
+    col = global_kicols
+  )
+
+  segments(
+    x0 = 1:nrow(plotdata), y0 = plotdata$lci, y1 = plotdata$uci,
+    col = global_kicols, lwd = 2
+  )
+
+  axis(2, at = seq(0, ymax, 5), cex.axis = cextext, las = 2)
+  axis(1,
+    at = seq(2, nrow(plotdata) - 1, 4), cex.axis = cextext,
+    labels = unique(plotdata %>% filter(!is.na(Outcome)) %>% pull(outforest)), tick = FALSE, padj = 1, line = -1.5
+  )
+
+  if (pprint) {
+    yplace <- plotdata %>%
+      filter(!is.na(Outcome)) %>%
+      group_by(Outcome) %>%
+      summarise(yplace = max(uci, na.rm = T), .groups = "drop") %>%
+      arrange(match(Outcome, outs), Outcome)
+
+    text(
+      x = seq(2, nrow(plotdata) - 1, 4), y = yplace$yplace + 2,
+      labels = plotdata$p[seq(2, nrow(plotdata) - 1, 4)],
+      cex = cextext, col = "red"
+    )
+
+    text(
+      x = seq(2, nrow(plotdata) - 1, 4), y = yplace$yplace + 2,
+      labels = plotdata$p[seq(2, nrow(plotdata) - 1, 4)],
+      cex = cextext, col = "red"
+    )
+
+    rateprint <- if_else(plotdata$rate < 10, dF(plotdata$rate, 1), dF(plotdata$rate, 0))
+    text(x = 1:nrow(plotdata), y = 0.5, labels = rateprint)
+  }
+
+  abline(h = seq(0, ymax, 5), col = "gray", lty = "dotted")
+
+  legend("topright", bty = "n", paste0("HF", levels(survdata$d_efgroup)), border = global_kicols, fill = global_kicols, cex = cextext, horiz = T)
+  if (!is.null(addletter)) mtext(addletter, side = 2, cex = 1.5, las = 1, adj = 0, line = 3.75, at = ymax)
+}
+```
+
+```{r incplot1, dependson="incplot", cache=cacheon, fig.cap = "Incidence death", fig.height = 5, fig.width = 10}
+plotforest(
+  outs = c("All-cause death", "CV death", "CV death (excl. HF)", "HF death", "Sudden cardiac death", "Non-CV death"),
+  addletter = expression(bold("A"))
+)
+```
+
+```{r incplot2, dependson="incplot", cache=cacheon, fig.cap = "Incidence hospitalisation", fig.height = 5, fig.width = 10}
+plotforest(outs = c(
+  "All-cause death or HF hospitalization", "All-cause hospitalization", "CV hospitalization", "CV hospitalization (excl. HF)",
+  "HF hospitalization", "Non-CV hospitalization"
+), addletter = expression(bold("B")))
+```
+
+```{r incplot3, dependson="incplot", cache=cacheon, fig.cap = "Incidence postdischarge", fig.height = 5, fig.width = 10}
+plotforest(outs = c(
+  "All-cause death or HF hospitalization", "All-cause death",
+  "HF hospitalization", "CV death", "CV death (excl. HF)", "HF death", "Non-CV death"
+), pprint = FALSE)
 ```

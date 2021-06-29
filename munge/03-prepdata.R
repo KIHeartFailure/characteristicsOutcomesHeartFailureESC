@@ -583,7 +583,21 @@ pdata <- pdata %>%
     # all-cause death or hf hosp
     out_deathhosphf = ifelse(out_hosphf == 1, 1, out_death),
     # cv death or hf hosp
-    out_deathcvhosphf = ifelse(out_hosphf == 1, 1, out_deathcv)
+    out_deathcvhosphf = ifelse(out_hosphf == 1, 1, out_deathcv), 
+    
+    # competing risk outcomes
+    out_deathcv_cr = if_else(out_deathcv == 0 & out_death == 1, 2, out_deathcv), 
+    out_deathcv_exclhf_cr = if_else(out_deathcv_exclhf == 0 & out_death == 1, 2, out_deathcv_exclhf), 
+    out_deathnoncv_cr = if_else(out_deathnoncv == 0 & out_death == 1, 2, out_deathnoncv), 
+    out_deathhf_cr = if_else(out_deathhf == 0 & out_death == 1, 2, out_deathhf), 
+    out_deathscd_cr = if_else(out_deathscd == 0 & out_death == 1, 2, out_deathscd), 
+    out_deathunknown_cr = if_else(out_deathunknown == 0 & out_death == 1, 2, out_deathunknown), 
+    out_hosp_cr = if_else(out_hosp == 0 & out_death == 1, 2, out_hosp), 
+    out_hospcv_cr = if_else(out_hospcv == 0 & out_death == 1, 2, out_hospcv), 
+    out_hospcv_exclhf_cr = if_else(out_hospcv_exclhf == 0 & out_death == 1, 2, out_hospcv_exclhf), 
+    out_hospnoncv_cr = if_else(out_hospnoncv == 0 & out_death == 1, 2, out_hospnoncv), 
+    out_hosphf_cr = if_else(out_hosphf == 0 & out_death == 1, 2, out_hosphf), 
+    out_deathcvhosphf_cr = if_else(out_deathcvhosphf == 0 & out_death == 1, 2, out_deathcvhosphf)
   ) %>%
   mutate(d_no_noncardiac_comorbs = rowSums(select(
     ., num_dmStroke, num_dmPvd, num_dmVte, d_dmDiab,

@@ -111,19 +111,22 @@ were lost to follow-up or died prior to discharge (probably due to error in repo
 Note that patients with missing information on cause of death or hospitalisation 
 are neither included in the CV death/hospitalisation or non-cv death/hospitalisation. 
 
-Time is from date of discharge, or if this is missing, date of admission and 
-censored at death not defined as an event or follow-up.  
+The outcomes are presented with the 1 - Kaplan-Meier curves for outcomes including 
+all-cause death and cumulative incidence functions for outcomes were death was considered a competing event. 
+The unadjusted and adjusted HR (95% CI), p-value from Cox proportional hazards regression models are provided in the figure. 
 
 Incidence per 1000 py was calculated with 95% Poisson confidence intervals. 
 Difference between EF groups is tested with log-rank test. 
-
-The outcomes are presented with the 1 - Kaplan-Meier curves.
 
 Cox proportional hazards regressions were used to evaluate possible predictors of 
 outcome for all-cause mortality and first HF hospitalization. The coeffs in the 
 respective EF groups were modelled using interactions with the respective variables. 
 So the multivariable model is not ONE model but one model / variable since the 
-interaction term needs to be included. 
+interaction term needs to be included. Note that this is not the same model depicted in the graphs. 
+
+Time is from date of discharge, or if this is missing, date of admission and 
+censored at follow-up or death not defined as an event (the latter is not applicable 
+to the cumulative incidence figures).  
 
 ### Assumptions
 
@@ -150,7 +153,7 @@ The median (min-max) follow-up is
 
 \clearpage
 
-```{r, child = "../src/km.Rmd"}
+```{r, child = "../src/ci.Rmd"}
 
 ```
 

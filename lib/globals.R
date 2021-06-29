@@ -7,12 +7,9 @@ complete <- tidyr::complete
 
 # colours 
 global_kicols <- c(
-  grDevices::rgb(135, 0, 82, maxColorValue = 255),
-  grDevices::rgb(212, 9, 99, maxColorValue = 255),
-  grDevices::rgb(128, 128, 128, maxColorValue = 255),
-  grDevices::rgb(151, 216, 218, maxColorValue = 255), # aqua
-  grDevices::rgb(136, 196, 197, maxColorValue = 255), # teal
-  grDevices::rgb(189, 171, 179, maxColorValue = 255) # lavender
+  grDevices::rgb(143, 170, 220, maxColorValue = 255), # blue
+  grDevices::rgb(244, 177, 131, maxColorValue = 255), # orange
+  grDevices::rgb(165, 165, 165, maxColorValue = 255) # grey
 )
 
 # used for calculation of ci 

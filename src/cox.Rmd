@@ -134,7 +134,7 @@ coxfunc <- function(time, event) {
 coxprint <- function(coxdata, eventname) {
   coxdataprint <- coxdata %>%
     select(-starts_with("loghr"), -starts_with("lci"), -starts_with("uci"))
-  
+
   write.xlsx(coxdataprint, paste0("./output/tabs/coxtab_", eventname, "_", Sys.Date(), ".xlsx"), rowNames = FALSE)
 
   colnames(coxdataprint) <- c("Variable", rep(c("Crude HR (95% CI), p-value", "Adjusted HR (95% CI), p-value"), 3), "Crude", "Adjusted")
@@ -219,11 +219,10 @@ coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxis
   cextext <- 0.9
 
   # c(bottom, left, top, right)
-  par(mar = c(2, 12, 0, 0) + 0.2)
+  par(mar = c(3, 12, 0, 0) + 0.2)
 
   # pef
   plot(coxdata$loghrpEF, 1:nrow(coxdata),
-    xlab = "",
     xlim = c(
       log(xmin),
       7.2
@@ -231,6 +230,7 @@ coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxis
     ylim = c(1, nrow(coxdata) + 1),
     axes = FALSE,
     ylab = NA,
+    xlab = NA,
     cex.lab = cextext,
     main = NA,
     cex = 1.1,
@@ -246,6 +246,7 @@ coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxis
   }
   # mref
   matplot(coxdata$loghrmrEF + add1, 1:nrow(coxdata),
+    cex.lab = cextext,
     cex = 1,
     type = "p",
     pch = 22,
@@ -260,6 +261,7 @@ coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxis
   }
   # ref
   matplot(coxdata$loghrrEF + add2, 1:nrow(coxdata),
+    cex.lab = cextext,
     cex = 1,
     type = "p",
     pch = 22,
@@ -338,6 +340,10 @@ coxfig <- function(coxdata, add1, add2, xmin, axismy, addaxisno1 = NULL, addaxis
   text(0, (nrow(coxdata) + 1), "HFpEF", cex = cextext)
   text(add1, (nrow(coxdata) + 1), "HFmrEF", cex = cextext)
   text(add2, (nrow(coxdata) + 1), "HFrEF", cex = cextext)
+
+  mtext("HR (95% CI)", side = 1, line = 2, at = -0.75, adj = 0, cex = cextext)
+  mtext("HR (95% CI)", side = 1, line = 2, at = -0.75 + add1, adj = 0, cex = cextext)
+  mtext("HR (95% CI)", side = 1, line = 2, at = -0.75 + add2, adj = 0, cex = cextext)
 }
 ```
 
